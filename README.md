@@ -72,15 +72,20 @@ pip install -r requirements.txt
 
 The MILP solver requires [SCIP](https://www.scipopt.org/) (version 9.0 used in the paper) via the `pyscipopt` Python interface.
 
-### 2. Install SkyHOST
+### 2. Install Skyplane and SkyHOSTop solver
 
-The evaluation scripts import the SkyHOSTop planner from the SkyHOST platform. SkyHOST (Hybrid Object and Streaming Transfer) extends Skyplane to support both bulk object transfer and continuous stream replication across multiple clouds. Install SkyHOST:
+The evaluation scripts build on the [Skyplane](https://github.com/skyplane-project/skyplane) data transfer framework. Install Skyplane and then copy the SkyHOSTop solver files (provided in this repository) into the Skyplane installation:
 
 ```bash
-pip install -e .  # from the SkyHOST source directory
+pip install "skyplane[aws,azure,gcp]"
+
+# Copy the SkyHOSTop MILP solver into the Skyplane planner module
+SKYPLANE_PATH=$(python -c "import skyplane; import os; print(os.path.dirname(skyplane.__file__))")
+cp solver/solver.py "$SKYPLANE_PATH/planner/solver.py"
+cp solver/solver_ilp.py "$SKYPLANE_PATH/planner/solver_ilp.py"
 ```
 
-The MILP solver implementation is in `solver/solver_ilp.py` and the base solver classes are in `solver/solver.py`.
+The MILP solver implementation is in `solver/solver_ilp.py` and the base solver classes are in `solver/solver.py`. These files extend Skyplane's solver with the SkyHOSTop streaming MILP formulation described in the paper.
 
 ### 3. Run the evaluation
 
