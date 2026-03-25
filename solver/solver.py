@@ -1,20 +1,32 @@
 import functools
+import logging
 import shutil
 from collections import namedtuple
 from dataclasses import dataclass
-from pathlib import Path # Added Path
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Optional, Tuple
 
-from skyplane import compute
-from skyplane.planner.topology import TopologyPlan
-from skyplane.utils import logger
-from skyplane.utils.definitions import GB
-
-# Define GBIT_PER_GBYTE locally
 GBIT_PER_GBYTE = 8
+GB = 1e9
+
+_logger = logging.getLogger("skyhost")
+
+
+class _LogShim:
+    """Minimal shim matching skyplane's logger.fs interface."""
+    def debug(self, msg): _logger.debug(msg)
+    def info(self, msg): _logger.info(msg)
+    def warning(self, msg): _logger.warning(msg)
+    def error(self, msg): _logger.error(msg)
+
+
+class _Logger:
+    fs = _LogShim()
+
+logger = _Logger()
 
 
 @dataclass
@@ -200,15 +212,6 @@ class ThroughputSolver:
             except Exception as e:
                  print(f"[DEBUG WARNING] Error looking up cost in custom CSV: {e}. Trying default.", flush=True)
                  logger.fs.warning(f"[DEBUG WARNING] Error looking up cost in custom CSV: {e}. Trying default.")
-
-        # Fallback to default method if no custom df or lookup failed
-        if cost is None:
-            try:
-                cost = compute.CloudProvider.get_transfer_cost(src_region_tag, dst_region_tag)
-            except Exception as e:
-                 print(f"[DEBUG ERROR] Error in default compute.CloudProvider.get_transfer_cost: {e}", flush=True)
-                 logger.fs.error(f"[DEBUG ERROR] Error in default compute.CloudProvider.get_transfer_cost: {e}")
-                 return float('inf') # Return high cost on error
 
         if cost is None:
             print(f"[DEBUG WARNING] get_transfer_cost returned None for {src_region_tag} -> {dst_region_tag}", flush=True)

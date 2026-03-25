@@ -1,7 +1,7 @@
 import cvxpy as cp
 import numpy as np
-from skyplane.utils import logger
-from skyplane.planner.solver import ThroughputSolver, ThroughputProblem, ThroughputSolution
+
+from solver.solver import ThroughputSolver, ThroughputProblem, ThroughputSolution, logger
 
 
 class ThroughputSolverILP(ThroughputSolver):

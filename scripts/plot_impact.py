@@ -3,8 +3,7 @@
 
 Figures (numbered to match LaTeX):
   1. Feasibility vs instance limit  (fig1_feasibility_vs_instances.pdf)
-  2. Average cost vs stream rate    (fig2_cost_vs_lambda.pdf)
-  3. MILP vs XRON cost comparison   (fig3_milp_vs_xron.pdf)
+  2. MILP vs XRON cost comparison   (fig2_milp_vs_xron.pdf)
 
 All figures use COST mode only.
 """
@@ -135,57 +134,7 @@ def plot_feasibility_vs_instances(df, out):
 
 
 # ────────────────────────────────────────────────────────────────────
-# Fig 2: Average cost vs stream rate (3 panels by N_max, all baselines)
-# ────────────────────────────────────────────────────────────────────
-def plot_cost_vs_lambda(df, out):
-    feas = df[df["feas"]].copy()
-    inst_limits = sorted(df["instance_limit"].unique())
-    n_panels = len(inst_limits)
-
-    fig, axes = plt.subplots(n_panels, 1, figsize=(3.45, 2.2 * n_panels), sharey=True)
-    if n_panels == 1:
-        axes = [axes]
-
-    lambdas = sorted(df["lambda_gbps"].unique())
-    n_bl = len(BL_ORDER)
-    bar_w = 0.18
-    x = np.arange(len(lambdas))
-
-    global_max = 0
-
-    for ax, inst in zip(axes, inst_limits):
-        sub = feas[feas["instance_limit"] == inst]
-        for j, bl in enumerate(BL_ORDER):
-            costs = []
-            for lam in lambdas:
-                s = sub[(sub["baseline"] == bl) & (sub["lambda_gbps"] == lam)]
-                costs.append(s["cost_total_hr"].mean() if len(s) > 0 else 0)
-            offset = (j - (n_bl - 1) / 2) * bar_w
-            ax.bar(x + offset, costs, bar_w, label=bl, **_bar_kwargs(bl))
-            local_max = max(c for c in costs if c > 0) if any(c > 0 for c in costs) else 0
-            global_max = max(global_max, local_max)
-
-        ax.set_title(f"$N_{{\\mathrm{{max}}}}$ = {inst}", fontsize=9)
-        ax.set_xticks(x)
-        ax.set_xticklabels([f"{l:.0f}" for l in lambdas])
-
-    y_top = global_max * 1.15
-    axes[0].set_ylim(0, y_top)
-    for ax in axes:
-        ax.set_ylabel("Avg cost (\\$/hr)")
-    axes[-1].set_xlabel("Stream rate $\\lambda$ (Gbps)")
-    axes[0].legend(loc="upper left", fontsize=7, borderpad=0.3,
-                   handletextpad=0.3, handlelength=1.2)
-
-    fig.tight_layout(h_pad=0.6)
-    fig.savefig(str(out) + ".pdf")
-    fig.savefig(str(out) + ".png", dpi=300)
-    plt.close(fig)
-    print(f"  -> {out}.pdf/.png")
-
-
-# ────────────────────────────────────────────────────────────────────
-# Fig 3: MILP vs XRON cost comparison (3 panels by N_max)
+# Fig 2: MILP vs XRON cost comparison (3 panels by N_max)
 # ────────────────────────────────────────────────────────────────────
 def plot_milp_vs_xron(df, out):
     milp_lbl = "SkyHOSTop (MILP)"
@@ -279,20 +228,6 @@ def verify_data(df):
         print(f"  N_max={inst}: {'  '.join(vals)}")
 
     # Fig 2 verification
-    feas = df[df["feas"]].copy()
-    print("\n--- Fig 2: Average cost ($/hr) vs lambda, per N_max ---")
-    for inst in sorted(df["instance_limit"].unique()):
-        print(f"  N_max={inst}:")
-        sub = feas[feas["instance_limit"] == inst]
-        for bl in BL_ORDER:
-            vals = []
-            for lam in sorted(df["lambda_gbps"].unique()):
-                s = sub[(sub["baseline"] == bl) & (sub["lambda_gbps"] == lam)]
-                c = s["cost_total_hr"].mean() if len(s) > 0 else 0
-                vals.append(f"{lam:.0f}G=${c:.1f}")
-            print(f"    {bl}: {'  '.join(vals)}")
-
-    # Fig 3 verification
     milp_lbl, xron_lbl = "SkyHOSTop (MILP)", "XRON heuristic"
     scen = ["src", "dst", "instance_limit", "lambda_gbps", "latency_budget_ms"]
     m = df[df["baseline"] == milp_lbl].set_index(scen)[["cost_total_hr", "feas"]].rename(
@@ -302,7 +237,7 @@ def verify_data(df):
     both = m.join(x, how="inner")
     both = both[both["fm"] & both["fx"]].reset_index()
 
-    print(f"\n--- Fig 3: MILP vs XRON (both-feasible: {len(both)} scenarios) ---")
+    print(f"\n--- Fig 2: MILP vs XRON (both-feasible: {len(both)} scenarios) ---")
     for inst in sorted(both["instance_limit"].unique()):
         sub = both[both["instance_limit"] == inst]
         print(f"  N_max={inst} ({len(sub)} scenarios):")
@@ -322,8 +257,8 @@ def verify_data(df):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", default="skyplane-test/mc_eval_results.csv")
-    parser.add_argument("--outdir", default="skyplane-test/paper_figures")
+    parser.add_argument("--csv", default="results/mc_eval_results.csv")
+    parser.add_argument("--outdir", default="figures")
     args = parser.parse_args()
 
     outdir = Path(args.outdir)
@@ -342,11 +277,8 @@ def main():
     print("\nFig 1: Feasibility vs Instance Limit")
     plot_feasibility_vs_instances(df, outdir / "fig1_feasibility_vs_instances")
 
-    print("\nFig 2: Cost vs Stream Rate (3 panels by N_max)")
-    plot_cost_vs_lambda(df, outdir / "fig2_cost_vs_lambda")
-
-    print("\nFig 3: MILP vs XRON Cost Comparison")
-    plot_milp_vs_xron(df, outdir / "fig3_milp_vs_xron")
+    print("\nFig 2: MILP vs XRON Cost Comparison")
+    plot_milp_vs_xron(df, outdir / "fig2_milp_vs_xron")
 
     print("\nDone. All figures saved to:", outdir)
 

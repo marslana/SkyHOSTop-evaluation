@@ -4,6 +4,11 @@ This repository contains the evaluation code, measurement data, and results for 
 
 > **SkyHOSTop: Cost-Aware Multi-Cloud Streaming Overlay Optimization**
 
+## Prerequisites
+
+- **Python 3.10 or 3.11** is required. Python 3.12+ is currently not compatible due to dependency constraints.
+- A virtual environment is recommended.
+
 ## Repository Structure
 
 ```
@@ -12,7 +17,7 @@ SkyHOSTop-evaluation/
 │   ├── mc_throughput_real.csv    # Per-VM throughput (Gbps), measured via iperf3
 │   ├── mc_latency_real.csv      # Inter-region RTT (ms), measured via ping
 │   └── mc_cost.csv              # Egress cost ($/GB) from provider pricing
-├── solver/                      # SkyHOSTop MILP solver (from SkyHOST platform)
+├── solver/                      # SkyHOSTop MILP solver (standalone)
 │   ├── solver.py                # Base solver classes (ThroughputProblem, ThroughputSolution)
 │   └── solver_ilp.py            # SkyHOSTop MILP formulation (SCIP-based)
 ├── scripts/                     # Evaluation and plotting scripts
@@ -58,7 +63,7 @@ python scripts/plot_impact.py \
 
 This produces:
 - `fig1_feasibility_vs_instances.pdf` — Feasibility (%) vs instance limit
-- `fig3_milp_vs_xron.pdf` — MILP vs XRON cost comparison by N_max
+- `fig2_milp_vs_xron.pdf` — MILP vs XRON cost comparison by N_max
 
 ## Full Reproduction: Re-run Evaluation
 
@@ -72,22 +77,7 @@ pip install -r requirements.txt
 
 The MILP solver requires [SCIP](https://www.scipopt.org/) (version 9.0 used in the paper) via the `pyscipopt` Python interface.
 
-### 2. Install Skyplane and SkyHOSTop solver
-
-The evaluation scripts build on the [Skyplane](https://github.com/skyplane-project/skyplane) data transfer framework. Install Skyplane and then copy the SkyHOSTop solver files (provided in this repository) into the Skyplane installation:
-
-```bash
-pip install "skyplane[aws,azure,gcp]"
-
-# Copy the SkyHOSTop MILP solver into the Skyplane planner module
-SKYPLANE_PATH=$(python -c "import skyplane; import os; print(os.path.dirname(skyplane.__file__))")
-cp solver/solver.py "$SKYPLANE_PATH/planner/solver.py"
-cp solver/solver_ilp.py "$SKYPLANE_PATH/planner/solver_ilp.py"
-```
-
-The MILP solver implementation is in `solver/solver_ilp.py` and the base solver classes are in `solver/solver.py`. These files extend Skyplane's solver with the SkyHOSTop streaming MILP formulation described in the paper.
-
-### 3. Run the evaluation
+### 2. Run the evaluation
 
 ```bash
 python scripts/eval_baselines.py \
@@ -102,6 +92,14 @@ python scripts/eval_baselines.py \
 ```
 
 This takes approximately 20-30 minutes on an Apple M1 Pro.
+
+### 3. Regenerate figures from new results
+
+```bash
+python scripts/plot_impact.py \
+    --csv results/mc_eval_results.csv \
+    --outdir figures/
+```
 
 ## Key Results Summary
 

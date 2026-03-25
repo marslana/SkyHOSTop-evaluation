@@ -10,6 +10,7 @@ Latency model matches conference paper (4-component per-path):
   - L_batch = 8*S_b / lambda                        (ms, worst-case)
 """
 import argparse
+import sys
 import time
 from math import ceil
 from pathlib import Path
@@ -17,8 +18,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from skyplane.planner.solver import ThroughputProblem
-from skyplane.planner.solver_ilp import ThroughputSolverILP
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from solver.solver import ThroughputProblem
+from solver.solver_ilp import ThroughputSolverILP
 
 # Constants matching solver_ilp.py and paper
 ALPHA = 4.0   # ms/MB per node (empirically measured processing rate coefficient)
@@ -336,16 +338,16 @@ def eval_xron_heuristic(src, dst, lambda_rate, lat_budget,
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate MILP vs direct vs single-path overlay baselines.")
-    parser.add_argument("--throughput", default="skyplane-test/solver_throughput.csv")
-    parser.add_argument("--latency", default="skyplane-test/solver_latency.csv")
-    parser.add_argument("--cost", default="skyplane-test/solver_cost.csv")
+    parser.add_argument("--throughput", default="data/mc_throughput_real.csv")
+    parser.add_argument("--latency", default="data/mc_latency_real.csv")
+    parser.add_argument("--cost", default="data/mc_cost.csv")
     parser.add_argument("--src", default="aws:us-east-1")
     parser.add_argument("--dst", default="aws:ap-southeast-1")
     parser.add_argument("--pairs", default="", help="Comma-separated src:dst pairs")
     parser.add_argument("--instance-limits", default="1,2,4", help="Comma-separated instance limits")
     parser.add_argument("--lambdas", default="1,2,3,4,5,6,7,8,10")
     parser.add_argument("--budgets", default="50,100,200,300,500,1000,2000")
-    parser.add_argument("--output", default="skyplane-test/eval_results.csv")
+    parser.add_argument("--output", default="results/mc_eval_results.csv")
     args = parser.parse_args()
 
     lambda_list = [float(x) for x in args.lambdas.split(",") if x.strip()]
