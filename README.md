@@ -105,7 +105,7 @@ python scripts/plot_impact.py \
 
 | Baseline | Feasibility | Avg Cost Saving vs XRON |
 |----------|-------------|------------------------|
-| SkyHOSTop (MILP) | 82.6% | 14.2% |
+| SkyHOSTop (MILP) | 82.6% | 12.9% |
 | XRON heuristic | 82.5% | — |
 | Single-path overlay | 55.1% | — |
 | Direct transfer | 30.1% | — |

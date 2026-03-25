@@ -250,8 +250,9 @@ def verify_data(df):
         inst_saving = (sub["cx"].mean() - sub["cm"].mean()) / sub["cx"].mean() * 100
         print(f"    Overall N_max={inst} saving: {inst_saving:.1f}%")
 
-    avg_saving = (both["cx"].mean() - both["cm"].mean()) / both["cx"].mean() * 100
-    print(f"  Overall average saving: {avg_saving:.1f}%")
+    per_scenario_savings = (both["cx"] - both["cm"]) / both["cx"] * 100
+    simple_avg = per_scenario_savings.mean()
+    print(f"  Simple average saving (per-scenario): {simple_avg:.1f}%")
     print("=" * 70)
 
 
