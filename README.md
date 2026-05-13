@@ -13,7 +13,7 @@ This repository contains the evaluation code, measurement data, and results for 
 
 ```
 SkyHOSTop-evaluation/
-├── data/                              # Multi-cloud measurement matrices (18 regions, 306 directed pairs)
+├── data/                              # Multi-cloud measurement matrices 
 │   ├── mc_throughput_real.csv          # Per-VM throughput (Gbps), measured via iperf3
 │   ├── mc_latency_real.csv            # Inter-region RTT (ms), measured via ping
 │   └── mc_cost.csv                    # Egress cost ($/GB) from provider pricing
@@ -22,7 +22,7 @@ SkyHOSTop-evaluation/
 │   └── solver_ilp.py                  # SkyHOSTop MILP formulation (SCIP-based)
 ├── scripts/                           # Evaluation and plotting scripts
 │   ├── eval_baselines.py              # Main evaluation: MILP + 3 baselines across parameter sweep
-│   ├── batch_ablation.py              # Routing-vs-batch-size ablation (MILP/XRON at fixed Sb)
+│   ├── batch_ablation.py              # Routing-vs-batch-size (MILP/XRON at fixed Sb)
 │   ├── scalability_sweep.py           # MILP solve time vs topology size (18-50 regions)
 │   ├── hop_comparison.py              # Effect of max relay hops (Hmax = 1, 2, 3)
 │   ├── uniform_drop.py                # Robustness to uniform throughput degradation
@@ -30,13 +30,13 @@ SkyHOSTop-evaluation/
 │   └── plot_scalability_v.py          # Generates scalability figure (solve time vs |V|)
 ├── results/                           # Pre-computed evaluation results
 │   ├── mc_eval_results.csv            # Main eval (1,440 scenarios x 4 baselines = 5,760 rows)
-│   ├── batch_ablation.csv             # Routing vs batch-size ablation
+│   ├── batch_ablation.csv             # Routing vs batch-size 
 │   ├── scalability.csv                # Solve times for |V| in {18, 24, 30, 36, 42, 50}
 │   ├── hop_comparison.csv             # Hmax sweep on a small probe set
 │   ├── hop_comparison_full.csv        # Hmax sweep on the full parameter grid
 │   ├── hop_comparison_hard.csv        # Hmax sweep on the stress-test (hard) subset
 │   └── uniform_drop.csv               # Cost change under 10% / 20% throughput degradation
-├── figures/                           # Pre-rendered paper figures
+├── figures/                           # Paper figures
 │   ├── fig1_feasibility_vs_instances.{pdf,png}   # Feasibility (%) vs N_max
 │   ├── fig2_milp_vs_xron.{pdf,png}              # MILP vs XRON cost by N_max and rate
 │   └── fig_scalability.pdf                       # Solve time vs |V|
