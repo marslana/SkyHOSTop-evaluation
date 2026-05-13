@@ -49,9 +49,23 @@ class ThroughputSolverILP(ThroughputSolver):
                     if LIMIT_link[r1, r2] > 0 and LIMIT_link[r2, dst_idx] > 0:
                         paths.append([src_idx, r1, r2, dst_idx])
 
+        # 3-hop relay paths: s -> r1 -> r2 -> r3 -> t
+        if max_hops >= 3:
+            for r1 in relays:
+                if LIMIT_link[src_idx, r1] <= 0:
+                    continue
+                for r2 in relays:
+                    if r2 == r1 or LIMIT_link[r1, r2] <= 0:
+                        continue
+                    for r3 in relays:
+                        if r3 == r1 or r3 == r2:
+                            continue
+                        if LIMIT_link[r2, r3] > 0 and LIMIT_link[r3, dst_idx] > 0:
+                            paths.append([src_idx, r1, r2, r3, dst_idx])
+
         return paths
 
-    def solve_skyhost_streaming(self, p: ThroughputProblem, mode="COST", solver_verbose=False, max_hops=1) -> ThroughputSolution:
+    def solve_skyhost_streaming(self, p: ThroughputProblem, mode="COST", solver_verbose=False, max_hops=1, fix_sb_mb=None) -> ThroughputSolution:
         """
         Path-Based MILP for SkyHOST Streaming.
         Matches the conference paper formulation:
@@ -221,8 +235,11 @@ class ThroughputSolverILP(ThroughputSolver):
         cons.append(N[dst_idx] >= 1)
 
         # Batch size bounds (Eq. batch-bounds)
-        cons.append(Sb >= S_MIN)
-        cons.append(Sb <= S_MAX)
+        if fix_sb_mb is not None:
+            cons.append(Sb == float(fix_sb_mb))
+        else:
+            cons.append(Sb >= S_MIN)
+            cons.append(Sb <= S_MAX)
 
         # --- 6. Objective ---
         if mode == "COST":

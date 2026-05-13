@@ -179,7 +179,7 @@ def eval_direct_and_heuristic(src, dst, lambda_rate, lat_budget, mode,
 def eval_xron_heuristic(src, dst, lambda_rate, lat_budget,
                         regions, idx, C_egress, L_rtt, LIMIT_link,
                         LIMIT_out, LIMIT_in, instance_limit,
-                        cost_per_instance_hr):
+                        cost_per_instance_hr, s_b_override=None):
     """
     XRON Algorithm 1 – greedy latency-first path control.
 
@@ -227,7 +227,8 @@ def eval_xron_heuristic(src, dst, lambda_rate, lat_budget,
         proc = ALPHA * len(path)
         batch = 8.0 / lambda_rate
 
-        lat = prop + (tx + proc + batch) * S_MIN
+        sb_used = s_b_override if s_b_override is not None else S_MIN
+        lat = prop + (tx + proc + batch) * sb_used
 
         if lat > lat_budget + 1e-6:
             continue
@@ -330,7 +331,7 @@ def eval_xron_heuristic(src, dst, lambda_rate, lat_budget,
 
     return {
         "cost_total_hr": cost_hr,
-        "batch_size_mb": S_MIN,
+        "batch_size_mb": s_b_override if s_b_override is not None else S_MIN,
         "est_latency_ms": max_lat,
         "path": path_str,
     }
