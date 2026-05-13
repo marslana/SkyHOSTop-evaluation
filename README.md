@@ -40,7 +40,6 @@ SkyHOSTop-evaluation/
 │   ├── fig1_feasibility_vs_instances.{pdf,png}   # Feasibility (%) vs N_max
 │   ├── fig2_milp_vs_xron.{pdf,png}              # MILP vs XRON cost by N_max and rate
 │   └── fig_scalability.pdf                       # Solve time vs |V|
-├── artifact-description.pdf            # Detailed reproducibility instructions
 ├── requirements.txt
 └── README.md
 ```
