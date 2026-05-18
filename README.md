@@ -29,7 +29,7 @@ SkyHOSTop-evaluation/
 │   ├── plot_impact.py                 # Generates Fig 1 (feasibility) and Fig 2 (MILP vs XRON)
 │   └── plot_scalability_v.py          # Generates scalability figure (solve time vs |V|)
 ├── results/                           # Pre-computed evaluation results
-│   ├── mc_eval_results.csv            # Main eval (1,440 scenarios x 4 baselines = 5,760 rows)
+│   ├── mc_eval_results.csv            # Main eval (3,600 scenarios x 4 baselines = 14,400 rows)
 │   ├── batch_ablation.csv             # Routing vs batch-size 
 │   ├── scalability.csv                # Solve times for |V| in {18, 24, 30, 36, 42, 50}
 │   ├── hop_comparison.csv             # Hmax sweep on a small probe set
@@ -61,10 +61,10 @@ The evaluation uses 18 cloud regions across three providers:
 | Stream rate (λ) | {1, 2, 3, 5, 8, 10, 12, 15} Gbps |
 | Latency budget | {100, 200, 300, 500, 1000} ms |
 | Instance limit (N_max) | {1, 2, 4} per region |
-| Source-destination pairs | 12 cross-cloud pairs (4 per provider combination) |
-| **Total scenarios** | **1,440 per baseline (5,760 rows total)** |
+| Source-destination pairs | 30 cross-cloud pairs (5 per directed provider combination) |
+| **Total scenarios** | **3,600 per baseline (14,400 rows total)** |
 
-The 12 source-destination pairs cover all three cross-cloud combinations (AWS↔Azure, AWS↔GCP, GCP↔Azure) with four intercontinental pairs per combination spanning US↔Europe, US↔Asia, US↔South America, and Europe↔Asia. All 18 regions remain available as relay candidates for every pair.
+The 30 source-destination pairs cover all six directed cross-cloud combinations (AWS→Azure, AWS→GCP, Azure→AWS, Azure→GCP, GCP→AWS, GCP→Azure) with five intercontinental pairs per combination spanning US↔Europe, US↔Asia, US↔South America, and Europe↔Asia. All 18 regions remain available as relay candidates for every pair.
 
 ## Quick Start: Regenerate Figures
 
@@ -100,14 +100,14 @@ python scripts/eval_baselines.py \
     --throughput data/mc_throughput_real.csv \
     --latency data/mc_latency_real.csv \
     --cost data/mc_cost.csv \
-    --pairs "aws:ap-northeast-1:azure:westeurope,aws:eu-west-1:gcp:asia-southeast1,aws:us-east-1:azure:brazilsouth,aws:us-east-1:gcp:europe-west1,azure:eastus:aws:eu-west-1,azure:japaneast:aws:us-west-2,azure:japaneast:gcp:us-west1,azure:westeurope:gcp:southamerica-east1,gcp:asia-northeast1:aws:us-west-2,gcp:asia-northeast1:azure:eastus,gcp:europe-west1:azure:southeastasia,gcp:us-east1:aws:sa-east-1" \
+    --pairs "aws:ap-northeast-1:azure:westeurope,aws:ap-southeast-1:gcp:us-east1,aws:eu-west-1:azure:japaneast,aws:eu-west-1:gcp:asia-southeast1,aws:sa-east-1:azure:southeastasia,aws:sa-east-1:gcp:asia-northeast1,aws:us-east-1:azure:brazilsouth,aws:us-east-1:gcp:europe-west1,aws:us-west-2:azure:eastus,aws:us-west-2:gcp:europe-west1,azure:brazilsouth:aws:ap-northeast-1,azure:brazilsouth:gcp:us-east1,azure:eastus:aws:eu-west-1,azure:eastus:gcp:europe-west1,azure:japaneast:aws:us-west-2,azure:japaneast:gcp:us-west1,azure:southeastasia:aws:sa-east-1,azure:westeurope:aws:us-east-1,azure:westeurope:gcp:southamerica-east1,azure:westus2:gcp:asia-northeast1,gcp:asia-northeast1:aws:us-west-2,gcp:asia-northeast1:azure:eastus,gcp:asia-southeast1:azure:japaneast,gcp:europe-west1:aws:us-east-1,gcp:europe-west1:azure:southeastasia,gcp:southamerica-east1:aws:eu-west-1,gcp:us-east1:aws:sa-east-1,gcp:us-east1:azure:westeurope,gcp:us-west1:aws:ap-northeast-1,gcp:us-west1:azure:brazilsouth" \
     --instance-limits "1,2,4" \
     --lambdas "1,2,3,5,8,10,12,15" \
     --budgets "100,200,300,500,1000" \
     --output results/mc_eval_results.csv
 ```
 
-This takes approximately 30-45 minutes on an Apple M1 Pro.
+This takes approximately 90-120 minutes on an Apple M1 Pro.
 
 ### 3. (Optional) Re-run secondary experiments
 
@@ -115,16 +115,16 @@ The pre-computed CSVs in `results/` cover the full settings reported in the pape
 
 ```bash
 # Routing-vs-batch ablation (Table IV in the paper)
-# Uses the same 12 pairs and parameter grid as the main eval (~30-45 min)
+# Uses the same 30 pairs and parameter grid as the main eval (~90-120 min)
 python scripts/batch_ablation.py --output results/batch_ablation.csv
 
 # Scalability sweep (Fig 6 in the paper)
-# Hmax=2, 15 random source-destination probes per topology size,
-# synthetic topologies for |V| > 18 (~10-15 min)
+# Hmax=2, 50 random source-destination probes per topology size,
+# synthetic topologies for |V| > 18 (~30-45 min)
 python scripts/scalability_sweep.py \
     --sizes "18,24,30,36,42,50" \
     --hops "2" \
-    --probes-per-size 15 \
+    --probes-per-size 50 \
     --output results/scalability.csv
 
 # Hmax sweep (effect of max relay hops on cost / feasibility / solve time)
@@ -146,46 +146,47 @@ python scripts/plot_impact.py --csv results/mc_eval_results.csv --outdir figures
 python scripts/plot_scalability_v.py --input results/scalability.csv --output figures/fig_scalability.pdf
 ```
 
-## Key Results Summary (12-pair main evaluation)
+## Key Results Summary (30-pair main evaluation)
 
 ### Feasibility (%) by per-region VM limit (N_max)
 
 | Method | N_max=1 | N_max=2 | N_max=4 | Aggregate |
 |--------|---------|---------|---------|-----------|
-| **SkyHOSTop (MILP)** | **56.9%** | **81.7%** | **93.1%** | **77.2%** |
-| XRON heuristic       | 55.6%   | 81.7%   | 93.1%   | 76.8%     |
-| Single-path overlay  | 26.9%   | 42.3%   | 70.2%   | 46.5%     |
-| Direct transfer      |  8.1%   | 19.4%   | 31.7%   | 19.7%     |
+| **SkyHOSTop (MILP)** | **54.5%** | **79.0%** | **90.2%** | **74.6%** |
+| XRON heuristic       | 53.5%   | 78.8%   | 90.2%   | 74.2%     |
+| Single-path overlay  | 24.9%   | 41.2%   | 67.1%   | 44.4%     |
+| Direct transfer      |  8.7%   | 18.6%   | 30.8%   | 19.4%     |
 
-### Cost saving — SkyHOSTop vs XRON (1,106 mutually feasible scenarios)
+### Cost saving — SkyHOSTop vs XRON (2,670 mutually feasible scenarios)
 
 | Metric | Value |
 |--------|-------|
-| Aggregate cost saving (cost-weighted) | **18.6%** |
-| Per-N_max saving (1 / 2 / 4) | 17.3% / 18.5% / 19.2% |
-| Per-λ saving (Gbps) range | 18.0% (λ=1) – 19.9% (λ=3) |
-| Median per-scenario saving | 12.5% |
+| Aggregate cost saving (cost-weighted) | **15.0%** |
+| Per-N_max saving range (1 / 2 / 4) | 13.2% – 16.0% |
+| Per-λ saving range (Gbps) | 14.1% (λ=12) – 16.7% (λ=1) |
 | Maximum per-scenario saving | 54.7% |
 
 ### Routing vs batch-size ablation (`batch_ablation.csv`)
 
+Average per-scenario cost over the 2,670 mutually feasible scenarios:
+
 | Both methods use Sb = | XRON ($/hr) | SkyHOSTop ($/hr) | Saving |
 |-----------------------|-------------|------------------|--------|
-| 1 MB (XRON default)   | 525,301     | 427,532          | 18.61% |
-| Sb* (SkyHOSTop's optimal, mean 8.5 MB) | 522,084 | 427,532 | 18.11% |
+| 1 MB (XRON default)   | 481.1       | 408.9            | 15.00% |
+| Sb* (SkyHOSTop's optimal, mean 9.0 MB) | 480.5 | 408.9 | 14.91% |
 
 This shows that the cost reduction comes primarily from **routing decisions** (relay selection, traffic splitting, VM placement), not from batch-size optimization.
 
-### Scalability (Hmax = 2)
+### Scalability (Hmax = 2, 50 random probes per size)
 
-| Topology size \|V\| | Median candidate paths | Median solve time |
-|---------------------|------------------------|-------------------|
-| 18 (measured)       | 257                    | 1.0 s             |
-| 30 (synthetic)      | 785                    | 3.1 s             |
-| 42 (synthetic)      | 1,601                  | 6.8 s             |
-| 50 (synthetic)      | 2,305                  | 10.9 s            |
+| Topology size \|V\| | Candidate paths | Median solve time | Max solve time |
+|---------------------|-----------------|-------------------|----------------|
+| 18 (measured)       | 257             | 0.87 s            | 0.94 s         |
+| 30 (synthetic)      | 785             | 2.85 s            | 3.16 s         |
+| 42 (synthetic)      | 1,601           | 6.26 s            | 6.89 s         |
+| 50 (synthetic)      | 2,305           | 9.99 s            | 13.22 s        |
 
-Worst-case solve time at \|V\|=50 across 15 random probes was below 13 s.
+All 300 instances reached proven global optimality with no wall-clock time limit.
 
 ### Robustness to uniform throughput degradation
 
