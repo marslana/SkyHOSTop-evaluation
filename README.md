@@ -6,7 +6,7 @@ This repository contains the evaluation code, measurement data, and results for 
 
 ## Prerequisites
 
-- **Python 3.10 or 3.11** is required. Python 3.12+ is currently not compatible due to dependency constraints.
+- Python 3.9+ is recommended (paper experiments used Python 3.9). Python 3.12+ may not be compatible due to dependency constraints.
 - A virtual environment is recommended.
 
 ## Repository Structure
@@ -32,8 +32,6 @@ SkyHOSTop-evaluation/
 │   ├── mc_eval_results.csv            # Main eval (3,600 scenarios x 4 baselines = 14,400 rows)
 │   ├── batch_ablation.csv             # Routing vs batch-size 
 │   ├── scalability.csv                # Solve times for |V| in {18, 24, 30, 36, 42, 50}
-│   ├── hop_comparison.csv             # Hmax sweep on a small probe set
-│   ├── hop_comparison_full.csv        # Hmax sweep on the full parameter grid
 │   ├── hop_comparison_hard.csv        # Hmax sweep on the stress-test (hard) subset
 │   └── uniform_drop.csv               # Cost change under 10% / 20% throughput degradation
 ├── figures/                           # Paper figures
